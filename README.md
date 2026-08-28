@@ -1,72 +1,111 @@
-# How to Check Whether a Windows PC Supports Virtualization
+# Windows Virtualization Setup & Troubleshooting Guide
 
-## PC Used in This Example
+## Example PC
 
 - **Model:** Dell OptiPlex 7460 AIO
 - **CPU:** Intel Core i7-8700 @ 3.20 GHz
 - **CPU cores:** 6
 - **Logical processors:** 12
-- **Memory:** 8 GB
+- **Installed RAM:** 8 GB
 - **Storage:** SATA SSD
-- **Result:** **Virtualization is supported and enabled**
+- **Final result:** ✅ Virtualization supported and enabled
 
 ---
 
-## 1. Check Virtualization Support in BIOS/UEFI
+# 1. Change Boot Order First
 
-Restart the PC and enter the BIOS/UEFI setup.
+Before installing an operating system or booting from installation media, check the **boot order**.
 
-On this Dell PC, the virtualization settings were located under:
+Enter BIOS/UEFI and open:
+
+**General → Boot Sequence**
+
+Make sure the device you want to boot from is placed first, for example:
+
+1. **USB / USB Storage Device** — if installing from a bootable USB
+2. **DVD drive** — if installing from a DVD
+3. **Internal SSD / Windows Boot Manager** — normal Windows boot
+
+After the operating system is installed, you can put:
+
+**Windows Boot Manager / Internal SSD**
+
+back at the top.
+
+> **Important:** If the PC keeps booting into the existing Windows installation instead of your installer, check the boot order first.
+
+---
+
+# 2. Enable Virtualization in BIOS/UEFI
+
+On this Dell PC, the virtualization settings are under:
 
 **BIOS → Virtualization Support**
 
-The available options were:
+The available options are:
 
-- **Virtualization**  
-  Enables Intel VT-x. This is the main hardware virtualization feature required for virtual machines.
+### Virtualization
+Enables **Intel VT-x**.
 
-- **VT for Direct I/O**  
-  Enables Intel VT-d. This provides advanced I/O/device virtualization support.
+This is the main hardware virtualization feature required for virtual machines.
 
-- **Trusted Execution**  
-  Intel Trusted Execution Technology (TXT). This is normally **not required** for standard virtual machines.
+**Recommended:** ✅ Enable
 
-### Recommended Settings
+### VT for Direct I/O
+Enables **Intel VT-d**.
 
-- ✅ **Virtualization:** Enabled
-- ✅ **VT for Direct I/O:** Enabled
-- ⬜ **Trusted Execution:** Can remain disabled for normal VM use
+This provides advanced I/O and device virtualization support.
 
-After changing the settings:
+**Recommended:** ✅ Enable
+
+### Trusted Execution
+Intel Trusted Execution Technology (**TXT**).
+
+This is normally not required for VMware, VirtualBox, WSL2, or normal VM use.
+
+**Recommended:** ⬜ Leave disabled unless specifically required
+
+### Recommended BIOS Setup
+
+- ✅ Virtualization — Enabled
+- ✅ VT for Direct I/O — Enabled
+- ⬜ Trusted Execution — Disabled for normal VM use
+
+Then:
 
 1. Click **Apply**
-2. Exit the BIOS
-3. Restart the PC
+2. Save changes
+3. Exit BIOS
+4. Restart the PC
 
 ---
 
-## 2. Check Windows Virtualization Features
+# 3. Enable Windows Virtualization Features
 
 Open:
 
 **Control Panel → Programs → Turn Windows features on or off**
 
-On this PC, the following Windows virtualization components were enabled:
+On this PC, these features were enabled:
 
 - ✅ **Virtual Machine Platform**
 - ✅ **Windows Hypervisor Platform**
 
-### What They Mean
+### What They Do
 
 | Feature | Purpose |
 |---|---|
-| Virtual Machine Platform | Provides virtualization components used by features such as WSL2 |
+| Virtual Machine Platform | Provides virtualization components used by WSL2 and other VM-based features |
 | Windows Hypervisor Platform | Lets compatible virtualization software use the Windows hypervisor |
-| Hyper-V | Microsoft's full virtual machine platform and Hyper-V Manager |
+| Hyper-V | Microsoft's complete virtualization platform and Hyper-V Manager |
 
-> Note: The full **Hyper-V** entry was not visible on this PC. Availability of full Hyper-V depends on the installed Windows edition and configuration.
+> The full **Hyper-V** feature may not appear on every Windows edition.
 
-After enabling Windows virtualization features, Windows may ask you to restart.
+After changing Windows Features, click **OK**.
+
+Windows may display:
+
+> **Windows completed the requested changes. Windows needs to reboot your PC.**
 
 Click:
 
@@ -74,7 +113,7 @@ Click:
 
 ---
 
-## 3. Confirm Virtualization in Task Manager
+# 4. Confirm Virtualization Is Enabled
 
 After Windows restarts:
 
@@ -82,77 +121,248 @@ After Windows restarts:
 2. Open **Task Manager**
 3. Select **Performance**
 4. Select **CPU**
-5. Look near the bottom-right for:
+5. Look for:
 
-**Virtualization: Enabled**
+> **Virtualization: Enabled**
 
 ### Possible Results
 
 | Result | Meaning |
 |---|---|
-| **Virtualization: Enabled** | Hardware virtualization is supported and enabled |
-| **Virtualization: Disabled** | CPU supports virtualization, but it is disabled in BIOS/UEFI |
-| Virtualization information is missing | Check BIOS settings and CPU specifications |
+| **Virtualization: Enabled** | ✅ Hardware virtualization is working |
+| **Virtualization: Disabled** | CPU supports it, but it is disabled in BIOS |
+| No virtualization information | Check BIOS settings and CPU specifications |
 
 On this Dell OptiPlex 7460 AIO, Task Manager showed:
 
 > **Virtualization: Enabled**
 
-This confirmed that hardware virtualization was working correctly.
+So the setup was successful.
 
 ---
 
-## 4. Final Result
+# 5. Important RAM Lesson From This PC
 
-This PC is ready to use virtualization software such as:
+This computer has **8 GB of physical RAM**.
 
-- VMware Workstation
-- Oracle VirtualBox
-- WSL2
-- Other virtualization software compatible with Windows
+When creating a virtual machine, I first tried assigning:
 
-The CPU supports hardware virtualization and Windows is detecting it correctly.
+> **4 GB RAM**
 
----
+but the virtualization software reported that there was **not enough available memory**.
 
-## 5. RAM Recommendation for Virtual Machines
+After reducing the VM memory to:
 
-This PC currently has **8 GB RAM**.
+> **2 GB RAM**
 
-Suggested VM memory allocations:
+the virtual machine worked.
 
-- Lightweight Linux VM: **2–4 GB**
-- Windows VM: **4 GB minimum**
-- Avoid running several VMs at the same time with only 8 GB RAM
+## Why This Happened
 
-For a better virtualization or cybersecurity lab experience:
+The host Windows system also needs RAM.
 
-> **Upgrade to 16 GB RAM or more if possible.**
-
----
-
-## Quick Memory Note
+With only 8 GB installed:
 
 ```text
-BIOS Virtualization / Intel VT-x
+8 GB total physical RAM
         ↓
-Hardware virtualization enabled
+Windows + background programs use part of it
         ↓
-Windows virtualization components
-        ↓
-Task Manager → CPU
-        ↓
-Virtualization: Enabled
-        ↓
-PC is ready for virtual machines
+Only the remaining RAM is available for the VM
 ```
 
-## Short Checklist
+So assigning 4 GB to the VM can fail when Windows is already using too much memory.
 
+## What Worked
+
+For this PC:
+
+> ✅ **2 GB VM RAM worked**
+
+## Recommended VM RAM With 8 GB Host RAM
+
+| VM Type | Suggested RAM |
+|---|---:|
+| Lightweight Linux | 2 GB |
+| Basic Linux desktop | 2–3 GB |
+| Windows VM | 2–4 GB, depending on available host memory |
+| Multiple VMs | Not recommended with only 8 GB total RAM |
+
+> Do not automatically assign half of the computer's total RAM to a VM. Check how much memory Windows is already using first.
+
+---
+
+# 6. Check Available Memory Before Starting a VM
+
+Open:
+
+**Task Manager → Performance → Memory**
+
+Look at:
+
+- **In use**
+- **Available**
+- Total installed memory
+
+Example:
+
+```text
+Installed RAM: 8 GB
+Windows currently using: ~3 GB
+Available: ~5 GB
+```
+
+You should leave enough RAM for Windows itself.
+
+A safer approach on an 8 GB machine is usually:
+
+> **Start the VM with 2 GB RAM**
+
+Then increase it later only if necessary.
+
+---
+
+# 7. Recommended Upgrade
+
+For basic virtualization:
+
+> **8 GB RAM = usable, but limited**
+
+For a much better experience:
+
+> **16 GB RAM = recommended**
+
+With 16 GB RAM, you can more comfortably run:
+
+- VMware Workstation
+- VirtualBox
+- WSL2
+- Windows VMs
+- Linux VMs
+- Cybersecurity labs
+- More than one light VM
+
+---
+
+# 8. Correct Setup Order
+
+For future use, follow this order:
+
+```text
+1. Enter BIOS/UEFI
+        ↓
+2. Set the correct boot order
+        ↓
+3. Enable Intel Virtualization / VT-x
+        ↓
+4. Enable VT for Direct I/O / VT-d
+        ↓
+5. Save and restart
+        ↓
+6. Enable Windows virtualization features if needed
+        ↓
+7. Restart Windows
+        ↓
+8. Task Manager → CPU
+        ↓
+9. Confirm "Virtualization: Enabled"
+        ↓
+10. Create the virtual machine
+        ↓
+11. Start with about 2 GB RAM on an 8 GB PC
+        ↓
+12. Boot from the ISO/USB installer
+```
+
+---
+
+# 9. Troubleshooting
+
+## VM says "Not Enough Memory"
+
+Try:
+
+1. Shut down the VM
+2. Close unnecessary applications
+3. Open **Task Manager → Performance → Memory**
+4. Check available RAM
+5. Reduce VM RAM
+
+On this PC:
+
+```text
+4 GB VM RAM → ❌ Not enough memory
+2 GB VM RAM → ✅ Worked
+```
+
+---
+
+## VM Does Not Boot From Installer
+
+Check:
+
+1. ISO/USB installation media is connected
+2. Boot order is correct
+3. USB/DVD/virtual optical drive is before the internal disk
+4. Restart the VM or PC
+
+---
+
+## Task Manager Says "Virtualization: Disabled"
+
+Go back to BIOS:
+
+**Virtualization Support → Virtualization → Enable**
+
+Save and restart.
+
+---
+
+# 10. Final Checklist
+
+- [x] Correct boot order configured
 - [x] CPU supports virtualization
-- [x] BIOS Virtualization enabled
+- [x] BIOS Virtualization / Intel VT-x enabled
 - [x] VT for Direct I/O enabled
 - [x] Windows Virtual Machine Platform enabled
 - [x] Windows Hypervisor Platform enabled
 - [x] PC restarted
 - [x] Task Manager shows **Virtualization: Enabled**
+- [x] 4 GB VM RAM was too high in this situation
+- [x] Reduced VM RAM to **2 GB**
+- [x] VM successfully worked with 2 GB RAM
+
+---
+
+# Quick Memory Note
+
+```text
+BOOT ORDER
+    ↓
+BIOS VT-x / VT-d
+    ↓
+WINDOWS VIRTUALIZATION FEATURES
+    ↓
+RESTART
+    ↓
+TASK MANAGER: VIRTUALIZATION ENABLED
+    ↓
+CREATE VM
+    ↓
+8 GB HOST RAM?
+Start around 2 GB VM RAM
+    ↓
+BOOT INSTALLER
+```
+
+## Main Lessons
+
+> **Lesson 1:** Check the boot order before trying to boot an installer.
+
+> **Lesson 2:** BIOS virtualization must be enabled before using virtual machines.
+
+> **Lesson 3:** "8 GB installed RAM" does not mean all 8 GB is available to the VM.
+
+> **Lesson 4:** If 4 GB gives a "not enough memory" error, reduce the VM memory. On this PC, **2 GB worked successfully**.
+
+> **Lesson 5:** For frequent VM use, upgrading the PC to **16 GB RAM** would make virtualization much easier.
